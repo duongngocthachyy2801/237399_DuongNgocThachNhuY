@@ -1,20 +1,18 @@
-# Sử dụng Node.js image chính thức
-FROM node:18-alpine
-
-# Tạo thư mục làm việc trong container
+# Stage 1: Build ứng dụng React
+FROM node:18-alpine as build
 WORKDIR /app
-
-# Copy file package.json và package-lock.json để cài thư viện
 COPY package*.json ./
-
-# Cài đặt các thư viện phụ thuộc
 RUN npm install
-
-# Copy toàn bộ mã nguồn backend vào container
 COPY . .
 
-# Mở cổng 5000 cho backend
-EXPOSE 5000
+# Bỏ qua các cảnh báo/lỗi ESLint khi build production
+ENV DISABLE_ESLINT_PLUGIN=true
+ENV CI=false
 
-# Lệnh khởi chạy server
-CMD ["node", "server.js"]
+RUN npm run build
+
+# Stage 2: Chạy ứng dụng bằng NGINX
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

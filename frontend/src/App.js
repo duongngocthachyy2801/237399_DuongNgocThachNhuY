@@ -1,62 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './App.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/employees';
 
 function App() {
   const [employees, setEmployees] = useState([]);
-  const [form, setForm] = useState({ name: '', position: '', salary: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    position: '',
+    department: '',
+    salary: ''
+  });
   const [editingId, setEditingId] = useState(null);
-
-  const API_URL = 'http://localhost:5000/api/employees';
-
-  // Lấy danh sách nhân viên từ Backend
-  const fetchEmployees = async () => {
-    try {
-      const res = await axios.get(API_URL);
-      setEmployees(res.data);
-    } catch (err) {
-      console.error('Lỗi lấy dữ liệu:', err);
-    }
-  };
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
-  // Xử lý thay đổi dữ liệu trong ô nhập
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      setEmployees(res.data);
+    } catch (err) {
+      console.error('Lỗi tải danh sách nhân viên:', err);
+    }
   };
 
-  // Xử lý Thêm mới hoặc Cập nhật nhân viên
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`${API_URL}/${editingId}`, form);
+        await axios.put(`${API_URL}/${editingId}`, formData);
         setEditingId(null);
       } else {
-        await axios.post(API_URL, form);
+        await axios.post(API_URL, formData);
       }
-      setForm({ name: '', position: '', salary: '' });
+      setFormData({ name: '', email: '', position: '', department: '', salary: '' });
       fetchEmployees();
     } catch (err) {
-      console.error('Lỗi lưu nhân viên:', err);
+      console.error('Lỗi lưu dữ liệu:', err);
     }
   };
 
-  // Chọn nhân viên để sửa
-  const handleEdit = (employee) => {
-    setEditingId(employee._id);
-    setForm({ 
-      name: employee.name || employee.fullName || employee.ten || '', 
-      position: employee.position || employee.chucVu || '', 
-      salary: employee.salary || employee.luong || employee.pay || '' 
+  const handleEdit = (emp) => {
+    setEditingId(emp._id);
+    setFormData({
+      name: emp.name || '',
+      email: emp.email || '',
+      position: emp.position || '',
+      department: emp.department || '',
+      salary: emp.salary || ''
     });
   };
 
-  // Xóa nhân viên
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa nhân viên này?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
       try {
         await axios.delete(`${API_URL}/${id}`);
         fetchEmployees();
@@ -67,61 +74,107 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '850px', margin: '0 auto' }}>
-      <h2 style={{ textAlign: 'center', color: '#333' }}>
-        HỆ THỐNG QUẢN LÝ NHÂN VIÊN - DƯƠNG NGỌC THẠCH NHƯ Ý (237399)
-      </h2>
-      
-      {/* Form Thêm / Sửa Nhân Viên */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-        <h3>{editingId ? 'Cập Nhật Nhân Viên' : 'Thêm Nhân Viên Mới'}</h3>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+    <div className="App" style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <h2>HỆ THỐNG QUẢN LÝ NHÂN SỰ</h2>
+      <p><strong>Họ và tên:</strong> Dương Ngọc Thạch Như Ý - <strong>MSSV:</strong> 237399</p>
+
+      <form onSubmit={handleSubmit} style={{ marginBottom: '30px', maxWidth: '500px' }}>
+        <h3>{editingId ? 'Cập nhật nhân viên' : 'Thêm nhân viên mới'}</h3>
+        <div style={{ marginBottom: '10px' }}>
           <input
             type="text"
             name="name"
-            placeholder="Tên nhân viên"
-            value={form.name}
-            onChange={handleChange}
+            placeholder="Họ và tên"
+            value={formData.name}
+            onChange={handleInputChange}
             required
-            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            style={{ width: '100%', padding: '8px' }}
           />
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleInputChange}
+            required
+            style={{ width: '100%', padding: '8px' }}
+          />
+        </div>
+        <div style={{ marginBottom: '10px' }}>
           <input
             type="text"
             name="position"
             placeholder="Chức vụ"
-            value={form.position}
-            onChange={handleChange}
-            required
-            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            value={formData.position}
+            onChange={handleInputChange}
+            style={{ width: '100%', padding: '8px' }}
           />
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <input
+            type="text"
+            name="department"
+            placeholder="Phòng ban"
+            value={formData.department}
+            onChange={handleInputChange}
+            style={{ width: '100%', padding: '8px' }}
+          />
+        </div>
+        <div style={{ marginBottom: '10px' }}>
           <input
             type="number"
             name="salary"
             placeholder="Lương"
-            value={form.salary}
-            onChange={handleChange}
-            required
-            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            value={formData.salary}
+            onChange={handleInputChange}
+            style={{ width: '100%', padding: '8px' }}
           />
-          <button 
-            type="submit" 
-            style={{ padding: '10px 20px', backgroundColor: editingId ? '#007bff' : '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            {editingId ? 'Cập nhật' : 'Thêm'}
-          </button>
         </div>
+        <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer' }}>
+          {editingId ? 'Cập nhật' : 'Thêm mới'}
+        </button>
       </form>
 
-      {/* Bảng Danh Sách Nhân Viên */}
-      <table border="1" cellPadding="12" cellSpacing="0" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', borderColor: '#ddd' }}>
+      <h3>Danh sách nhân viên</h3>
+      <table border="1" cellPadding="10" cellSpacing="0" style={{ width: '100%', textAlign: 'left' }}>
         <thead>
-          <tr style={{ backgroundColor: '#007bff', color: '#fff' }}>
-            <th>Tên</th>
+          <tr style={{ backgroundColor: '#f2f2f2' }}>
+            <th>STT</th>
+            <th>Họ và tên</th>
+            <th>Email</th>
             <th>Chức vụ</th>
+            <th>Phòng ban</th>
             <th>Lương</th>
-            <th style={{ textAlign: 'center' }}>Hành động</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
-          {employees.length > 0 ? (
-            employees.map((emp)
+          {employees.length === 0 ? (
+            <tr>
+              <td colSpan="7" style={{ textAlign: 'center' }}>Chưa có dữ liệu nhân viên</td>
+            </tr>
+          ) : (
+            employees.map((emp, index) => (
+              <tr key={emp._id || index}>
+                <td>{index + 1}</td>
+                <td>{emp.name}</td>
+                <td>{emp.email}</td>
+                <td>{emp.position}</td>
+                <td>{emp.department}</td>
+                <td>{emp.salary}</td>
+                <td>
+                  <button onClick={() => handleEdit(emp)} style={{ marginRight: '5px' }}>Sửa</button>
+                  <button onClick={() => handleDelete(emp._id)}>Xóa</button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default App;
